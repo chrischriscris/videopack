@@ -24,15 +24,41 @@ def get_args() -> argparse.Namespace:
 
     return parser.parse_args()
 
+
 def trim_silence(track_filename: str):
     """Trims the silences out of the beginning and the end of the provided track"""
-    in_file = ffmpeg.input(track_filename)
+    stream = ffmpeg.input(track_filename)
+    stream = ffmpeg.filter(
+        stream,
+        "silenceremove",
+        start_periods=1,
+        start_duration=1,
+        start_threshold="-60dB",
+        detection="peak",
+    )
+    stream = ffmpeg.filter(stream, "aformat", "dblp")
+    stream = ffmpeg.filter(stream, "areverse")
+
+    # Does the same to the reversed file
+    stream = ffmpeg.filter(
+        stream,
+        "silenceremove",
+        start_periods=1,
+        start_duration=1,
+        start_threshold="-60dB",
+        detection="peak",
+    )
+    stream = ffmpeg.filter(stream, "aformat", "dblp")
+    stream = ffmpeg.filter(stream, "areverse")
+
+    stream.output("output.flac").run()
 
 
 def concat_music_files(files: List[str]):
     """Takes a list of filenames and concats all music files into a single file"""
     ffmpeg.concat()
     pass
+
 
 def main():
     args = get_args()
@@ -48,4 +74,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # main()
+    trim_silence("testdir/01. La Sambainina.flac")
