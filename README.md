@@ -4,7 +4,7 @@ Packs a directory of songs and a cover into a full video, spitting out the times
 
 Made to facilitate the upload of full albums into YouTube.
 
-## Command used
+## Commands used
 
 - To trim the silence out of the tracks:
 

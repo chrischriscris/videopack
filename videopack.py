@@ -24,6 +24,10 @@ def get_args() -> argparse.Namespace:
 
     return parser.parse_args()
 
+def trim_silence(track_filename: str):
+    """Trims the silences out of the beginning and the end of the provided track"""
+    in_file = ffmpeg.input(track_filename)
+
 
 def concat_music_files(files: List[str]):
     """Takes a list of filenames and concats all music files into a single file"""
