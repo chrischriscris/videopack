@@ -29,7 +29,7 @@ def get_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def trim_silence(track_filename: str):
+def trim_silence(track_filename: str, output_filename="output.flac"):
     """Trims the silences out of the beginning and the end of the provided track"""
     stream = ffmpeg.input(track_filename)
     stream = ffmpeg.filter(
@@ -55,30 +55,15 @@ def trim_silence(track_filename: str):
     stream = ffmpeg.filter(stream, "aformat", "dblp")
     stream = ffmpeg.filter(stream, "areverse")
 
-    stream.output("output.flac").run()
+    stream.output(output_filename).run()
 
 
 def concat_music_files(files: List[str]):
     """Takes a list of filenames and concats all music files into a single file"""
     inputs = [ffmpeg.input(f) for f in files]
-    print( ffmpeg.concat(*inputs, a=1).output("output.flac").compile() )
-    ffmpeg.concat(*inputs, a=1).output("output.flac").run()
-    # with tempfile.NamedTemporaryFile() as tmp:
-    #     for path in files:
-    #         tmp.write(str.encode(f"file '{path}'\n"))
-    #     tmp.seek(0)
+    print(' '.join(ffmpeg.concat(*inputs, a=1,v=0).output("output.flac").compile()))
 
-    #     stream = ffmpeg.input(tmp.name)
-    #     stream = ffmpeg.filter(stream, "concat", "unsafe")
-
-    #     try:
-    #         os.system(f"cat {tmp.name}")
-    #         os.system(f"ffmpeg -f concat -safe 0 -i {tmp.name} -c copy output.flac")
-    #         print(stream.output("output.flac", c='copy').compile())
-    #         time.sleep(100)
-    #     except:
-    #         print("HOla!!")
-
+    ffmpeg.concat(*inputs, a=1, v=0).output("output.flac").run()
 
 def listdir_absolute(directory: str) -> List[str]:
     dirs = []
@@ -112,7 +97,15 @@ def main():
     music_files = list(sorted(filter(is_music_file, files)))
 
     # TODO: Check if there are music files
-    concat_music_files(music_files)
+    news = []
+    for path in music_files:
+        # THis is atrocius but just a test
+        nf = f"/tmp/{len(news):03}.flac"
+        trim_silence(path, nf)
+        news.append(nf)
+
+    print("\n\n\n\n\n\n", news, "\n\n\n\n\n\n")
+    concat_music_files(news)
 
 
 if __name__ == "__main__":
