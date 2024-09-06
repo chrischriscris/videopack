@@ -61,16 +61,23 @@ def trim_silence(track_filename: str):
 def concat_music_files(files: List[str]):
     """Takes a list of filenames and concats all music files into a single file"""
     inputs = [ffmpeg.input(f) for f in files]
+    print( ffmpeg.concat(*inputs, a=1).output("output.flac").compile() )
     ffmpeg.concat(*inputs, a=1).output("output.flac").run()
     # with tempfile.NamedTemporaryFile() as tmp:
     #     for path in files:
     #         tmp.write(str.encode(f"file '{path}'\n"))
     #     tmp.seek(0)
 
-    #     print(tmp.read())
-    #     ffmpeg.input(tmp.name, format='concat', safe=0).output("output.flac", c='copy').run()
+    #     stream = ffmpeg.input(tmp.name)
+    #     stream = ffmpeg.filter(stream, "concat", "unsafe")
 
-
+    #     try:
+    #         os.system(f"cat {tmp.name}")
+    #         os.system(f"ffmpeg -f concat -safe 0 -i {tmp.name} -c copy output.flac")
+    #         print(stream.output("output.flac", c='copy').compile())
+    #         time.sleep(100)
+    #     except:
+    #         print("HOla!!")
 
 
 def listdir_absolute(directory: str) -> List[str]:
