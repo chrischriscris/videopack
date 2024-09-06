@@ -20,4 +20,5 @@ ffmpeg -i input1.flac -i input2.flac -filter_complex [0][1]concat=a=1:n=2:v=0[s0
 - To create a video with a given cover image:
 
 ```bash
+ffmpeg -loop 1 -i image.jpg -i audio.flac -shortest output.mp4
 ```

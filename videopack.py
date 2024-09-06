@@ -3,9 +3,8 @@
 import argparse
 import os
 import sys
+import subprocess
 from typing import List
-import tempfile
-import time
 
 import ffmpeg
 
@@ -61,9 +60,8 @@ def trim_silence(track_filename: str, output_filename="output.flac"):
 def concat_music_files(files: List[str]):
     """Takes a list of filenames and concats all music files into a single file"""
     inputs = [ffmpeg.input(f) for f in files]
-    print(' '.join(ffmpeg.concat(*inputs, a=1,v=0).output("output.flac").compile()))
-
     ffmpeg.concat(*inputs, a=1, v=0).output("output.flac").run()
+
 
 def listdir_absolute(directory: str) -> List[str]:
     dirs = []
@@ -80,6 +78,22 @@ def is_music_file(filename: str) -> bool:
             return True
 
     return False
+
+
+def create_video(cover_file: str):
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-loop",
+            "1",
+            "-i",
+            cover_file,
+            "-i",
+            "output.flac",
+            "-shortest",
+            "output.mp4",
+        ]
+    )
 
 
 def main():
@@ -104,8 +118,9 @@ def main():
         trim_silence(path, nf)
         news.append(nf)
 
-    print("\n\n\n\n\n\n", news, "\n\n\n\n\n\n")
     concat_music_files(news)
+
+    create_video(f"{dir}/cover.jpg")
 
 
 if __name__ == "__main__":
