@@ -14,6 +14,7 @@ ffmpeg -i input.mp3 -af "silenceremove=start_periods=1:start_duration=1:start_th
 
 - To concatenate the tracks:
 ```bash
+ffmpeg -i input1.flac -i input2.flac -filter_complex [0][1]concat=a=1:n=2:v=0[s0] -map [s0] output.flac
 ```
 
 - To create a video with a given cover image:
