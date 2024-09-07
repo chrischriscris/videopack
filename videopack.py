@@ -7,6 +7,7 @@ import sys
 import subprocess
 from typing import List
 import tempfile
+import time
 
 import ffmpeg
 
@@ -132,7 +133,7 @@ def main():
 
             probe = ffmpeg.probe(trimmed_path)["format"]
             duration = float(probe["duration"])
-            title = probe["tags", "title"]
+            title = probe["tags"]["title"]
             song = SongData(trimmed_path, duration, title)
             songs.append(song)
 
@@ -140,7 +141,11 @@ def main():
             concat_music_files([s.path for s in songs], tmpfile.name)
             create_video(tmpfile.name, f"{dir}/cover.jpg")
 
-    print("Done!")
+    current_second = 0
+    for song in songs:
+        timestamp = time.strftime("%H:%M:%S", time.gmtime(current_second))
+        print(f"{timestamp} {song.title}")
+        current_second += song.duration
 
 
 if __name__ == "__main__":
