@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
+from dataclasses import dataclass
 import argparse
 import os
 import sys
 import subprocess
 from typing import List
+import tempfile
 
 import ffmpeg
 
@@ -57,10 +59,12 @@ def trim_silence(track_filename: str, output_filename="output.flac"):
     stream.output(output_filename).run()
 
 
-def concat_music_files(files: List[str]):
+def concat_music_files(files: List[str], output_filename: str = "output.flac"):
     """Takes a list of filenames and concats all music files into a single file"""
     inputs = [ffmpeg.input(f) for f in files]
-    ffmpeg.concat(*inputs, a=1, v=0).output("output.flac").run()
+    print(f"{files=}, {output_filename=}")
+    print(ffmpeg.concat(*inputs, a=1, v=0).output(output_filename).compile())
+    ffmpeg.concat(*inputs, a=1, v=0).output(output_filename).run()
 
 
 def listdir_absolute(directory: str) -> List[str]:
@@ -80,20 +84,28 @@ def is_music_file(filename: str) -> bool:
     return False
 
 
-def create_video(cover_file: str):
+def create_video(audio_file: str, image_file: str):
+    """Creates a video out of an audio and an image file"""
     subprocess.run(
         [
             "ffmpeg",
             "-loop",
             "1",
             "-i",
-            cover_file,
+            image_file,
             "-i",
-            "output.flac",
+            audio_file,
             "-shortest",
             "output.mp4",
         ]
     )
+
+
+@dataclass
+class SongData:
+    path: str
+    duration: float
+    title: str
 
 
 def main():
@@ -111,16 +123,24 @@ def main():
     music_files = list(sorted(filter(is_music_file, files)))
 
     # TODO: Check if there are music files
-    news = []
-    for path in music_files:
-        # THis is atrocius but just a test
-        nf = f"/tmp/{len(news):03}.flac"
-        trim_silence(path, nf)
-        news.append(nf)
 
-    concat_music_files(news)
+    songs: List[SongData] = []
+    with tempfile.TemporaryDirectory() as tmpdir:
+        for path in music_files:
+            trimmed_path = f"{tmpdir}/{len(songs):03}.flac"
+            trim_silence(path, trimmed_path)
 
-    create_video(f"{dir}/cover.jpg")
+            probe = ffmpeg.probe(trimmed_path)["format"]
+            duration = float(probe["duration"])
+            title = probe["tags", "title"]
+            song = SongData(trimmed_path, duration, title)
+            songs.append(song)
+
+        with tempfile.NamedTemporaryFile(suffix=".flac") as tmpfile:
+            concat_music_files([s.path for s in songs], tmpfile.name)
+            create_video(tmpfile.name, f"{dir}/cover.jpg")
+
+    print("Done!")
 
 
 if __name__ == "__main__":
