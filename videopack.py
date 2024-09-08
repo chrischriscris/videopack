@@ -27,6 +27,7 @@ def get_args() -> argparse.Namespace:
     parser.add_argument("dirname")
     parser.add_argument("-c", "--cover")
     parser.add_argument("-d", "--disable-cover", action="store_true")
+    parser.add_argument("-t", "--trim-silence", action="store_true")
 
     return parser.parse_args()
 
@@ -57,6 +58,12 @@ def trim_silence(track_filename: str, output_filename="output.flac"):
     stream = ffmpeg.filter(stream, "aformat", "dblp")
     stream = ffmpeg.filter(stream, "areverse")
 
+    stream.output(output_filename).run()
+
+def reencode_track(track_filename: str, output_filename="output.flac"):
+    """Reencodes the provided track to avoid issues concatenating"""
+    stream = ffmpeg.input(track_filename)
+    stream = ffmpeg.filter(stream, "aformat", "dblp")
     stream.output(output_filename).run()
 
 
@@ -108,9 +115,9 @@ class SongData:
     duration: float
     title: str
 
-
 def main():
     args = get_args()
+    print(args)
     dir = args.dirname
     if not os.path.isdir(dir):
         errprint("Error: The given path is not a directory")
@@ -129,11 +136,24 @@ def main():
     with tempfile.TemporaryDirectory() as tmpdir:
         for path in music_files:
             trimmed_path = f"{tmpdir}/{len(songs):03}.flac"
-            trim_silence(path, trimmed_path)
+
+            if args.trim_silence:
+                trim_silence(path, trimmed_path)
+            else:
+                reencode_track(path, trimmed_path)
 
             probe = ffmpeg.probe(trimmed_path)["format"]
             duration = float(probe["duration"])
-            title = probe["tags"]["title"]
+            title = f"{len(songs) + 1}. Unknown"
+            tags = probe["tags"]
+            # Make this a better method
+            if "title" in tags:
+                title = tags["title"]
+            elif "Title" in tags:
+                title = tags["Title"]
+            elif "TITLE" in tags:
+                title = tags["TITLE"]
+
             song = SongData(trimmed_path, duration, title)
             songs.append(song)
 
