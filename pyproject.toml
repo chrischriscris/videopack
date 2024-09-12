@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "videopack"
+version = "0.0.1"
+dependencies = ["ffmpeg-python"]
+
+[tool.setuptools.packages.find]
+where = ["videopack"]
+
+[project.scripts]
+cli-name = "videopack.cli:main"
+
+[options.entry_points]
+console-scripts = "videopack.cli:main"
